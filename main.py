@@ -26,14 +26,12 @@ driver = webdriver.Chrome(options=options)
 try:
     # === 4. Переход на сайт с проектами ===
     driver.get("https://gisp.gov.ru/nmp/main/?recommended=0&search_terms=&search_terms=&search_terms=&search_terms=&event=&search_terms=&search_terms=&search_terms=&search_terms=&search_terms=&measureActive=1&searchstr=&csrftoken=1809ba1086ebed6939c64a68812d4a676b4f06aef49a6bf91c361e661bcaf32f5b54d4342bda65a1")
-    wait = WebDriverWait(driver, 10)  # Явное ожидание элементов на странице (до 10 секунд)
+    wait = WebDriverWait(driver, 5)  # Явное ожидание элементов на странице (до 10 секунд)
 
     # === 5. Цикл для обработки всех страниц с проектами ===
     while True:
         # ШАГ 1: Находим ссылки на проекты на текущей странице
-        # project_links = wait.until(EC.presence_of_all_elements_located(
-        #     (By.CSS_SELECTOR, "catalog__list - info a")  # Найти ссылки внутри catalog_list-info
-        # ))
+
 
         project_links = driver.find_elements(By.CSS_SELECTOR, ".catalog__list-info a")
         print(project_links[0].get_attribute("href"))
@@ -59,14 +57,24 @@ try:
         # ШАГ 4: Проверяем, есть ли следующая страница
         try:
             # Ищем кнопку "Следующая страница" через селектор на основе атрибутов
-            next_button = wait.until(EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, "a[href*='/nmp/main/'] svg use[xlink\\:href='#arrow-next-blue']")))
 
+            next_button = driver.find_elements(By.CSS_SELECTOR, "a[href*='/nmp/main/'] svg use")
+            if len(next_button) == 1:
+                # Если только один элемент (первая итерация), кликаем по нему
+                print("Кликаем по единственному элементу")
+                next_link = next_button[0].find_element(By.XPATH, "..")
+                next_link.click()
+
+            elif len(next_button) > 1:
+                # Если два или больше, кликаем по второму
+                print("Кликаем по второму элементу")
+                next_link = next_button[1].find_element(By.XPATH, "..")
+                next_link.click()
             # Кликаем по кнопке
-            next_button.find_element(By.XPATH, "..").click()  # Переход на родительский тег <a>
 
             # Ждем, пока загрузится новая страница (пример: ждем появления контента карточек проектов)
-            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".card-wrapper")))
+            time.sleep(5)
+
         except TimeoutException:
             print("Следующей страницы не найдено.")
             break
@@ -74,4 +82,6 @@ try:
 finally:
     # === 6. Завершаем работу и закрываем браузер ===
     driver.quit()
+
+
 
